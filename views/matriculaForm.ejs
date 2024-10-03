@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%= title %>
+  </title>
+  <style>
+    .error-border {
+      border: 2px solid red;
+    }
+
+    .error-message {
+      color: red;
+      font-size: 12px;
+      margin-top: 5px;
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1 class="title">Escola Virtual</h1>
+    <h2 class="title">Formulário de Pré-Matrícula</h2>
+
+    <!-- Formulário -->
+    <form id="matriculaForm">
+      <div class="section">
+        <h3>Dados Pessoais:</h3>
+
+        <label for="nomeAluno">Nome do Aluno:</label>
+        <input type="text" id="nomeAluno" name="nomeAluno">
+
+        <div class="inline-group">
+          <div class="inline-input">
+            <label for="nascimento">Data de Nascimento:</label>
+            <input type="date" id="nascimento" name="nascimento">
+          </div>
+        </div>
+
+        <label for="nomeMae">Nome da Mãe:</label>
+        <input type="text" id="nomeMae" name="nomeMae">
+
+        <label for="nomePai">Nome do Pai:</label>
+        <input type="text" id="nomePai" name="nomePai">
+
+        <label for="telefone">Telefone:</label>
+        <div class="inline-input">
+          <input type="text" id="ddd" name="ddd" placeholder="DDD" maxlength="2">
+          <input type="text" id="tel" name="tel" placeholder="Telefone" maxlength="10">
+          <input type="text" id="ramal" name="ramal" placeholder="Ramal">
+        </div>
+
+        <label for="email">E-Mail:</label>
+        <input type="email" id="email" name="email">
+      </div>
+
+      <div class="section">
+        <h3>Informações de Matrícula:</h3>
+        <label for="serie">Série:</label>
+        <select id="serie" name="serie">
+          <option value="pre-escolar">Pré-escolar</option>
+          <option value="pre-escolar">Ensino Fundamental I</option>
+          <option value="pre-escolar">Ensino Fundamental II</option>
+          <option value="pre-escolar">Ensino Médio</option>
+        </select>
+
+        <div class="radio-group">
+          <label>Turno:</label>
+          <input type="radio" id="manha" name="turno" value="manha" checked>
+          <label for="manha">Manhã</label>
+          <input type="radio" id="tarde" name="turno" value="tarde">
+          <label for="tarde">Tarde</label>
+        </div>
+
+        <h3>Atividades Extracurriculares: (max. 3)</h3>
+        <div class="checkbox-group">
+          <label><input type="checkbox" id="informatica" name="atividades" value="informatica"> Informática</label>
+          <label><input type="checkbox" id="musica" name="atividades" value="musica"> Música</label>
+          <label><input type="checkbox" id="ballet" name="atividades" value="ballet"> Ballet</label>
+          <label><input type="checkbox" id="pintura" name="atividades" value="pintura"> Pintura</label>
+          <label><input type="checkbox" id="judo" name="atividades" value="judo"> Judô</label>
+          <label><input type="checkbox" id="futebol" name="atividades" value="futebol"> Futebol</label>
+        </div>
+
+
+      </div>
+
+      <div class="buttons">
+        <input type="submit" value="Envia Formulário">
+        <input type="reset" value="Limpa Campos">
+      </div>
+    </form>
+  </div>
+
+
+
+
+
+  <script>
+
+    document.getElementById('matriculaForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData);
+
+      const atividades = [];
+      document.querySelectorAll('input[name="atividades"]:checked').forEach(checkbox => {
+        atividades.push(checkbox.value);
+      });
+
+      data.atividades = atividades;
+
+      document.querySelectorAll('.error-border').forEach(el => el.classList.remove('error-border'));
+      document.querySelectorAll('.error-message').forEach(el => el.remove());
+
+      fetch('/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+        .then(response => response.json())
+        .then(response => {
+          if (response.status === 'error') {
+
+            response.errors.forEach(error => {
+              const field = document.querySelector(`[name="${error.field}"]`);
+
+              if (field) {
+                field.classList.add('error-border');
+
+                if (!field.nextElementSibling || !field.nextElementSibling.classList.contains('error-message')) {
+                  const errorMessage = document.createElement('div');
+                  errorMessage.classList.add('error-message');
+                  errorMessage.textContent = error.message;
+
+                  if (error.field === 'atividades') {
+                    const activitiesGroup = document.querySelector('.checkbox-group');
+                    activitiesGroup.appendChild(errorMessage);
+                  } else {
+                    field.parentNode.insertBefore(errorMessage, field.nextSibling);
+                  }
+                }
+              }
+            });
+          } else {
+            alert('Formulário enviado com sucesso!');
+          }
+        });
+    });
+
+   
+  </script>
+</body>
+
+</html>
